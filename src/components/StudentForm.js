@@ -23,7 +23,7 @@ export default class StudentForm extends Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    const { studentToEdit, handleClearStudentToEdit } = this.props;
+    const { students, studentToEdit, handleClearStudentToEdit } = this.props;
 
     if (studentToEdit.id !== '') {
       this.setState({
@@ -37,6 +37,14 @@ export default class StudentForm extends Component {
       });
       this.setState({ student: studentToEdit, isEditing: true });
       handleClearStudentToEdit();
+    }
+
+    // Clear form and errors if the user is editing a student and deleting that same student.
+    if (prevProps.students.length !== students.length) {
+      if (this.state.student.id) {
+        !students.some((s) => s.id === this.state.student.id) &&
+          this.handleCancelEdit();
+      }
     }
   }
 
