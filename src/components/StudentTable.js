@@ -16,14 +16,11 @@ export default class StudentTable extends Component {
 
   handleSearch = (students) => {
     return students.filter((student) => {
-      const fullNameRemoveAccents = this.removeAccents(
+      const studentFullName = this.removeAccents(
         student.fullName.toLowerCase()
       );
-      const searchTextRemoveAccents = this.removeAccents(
-        this.state.searchText.toLowerCase()
-      );
 
-      return fullNameRemoveAccents.includes(searchTextRemoveAccents);
+      return studentFullName.includes(this.state.searchText.toLowerCase());
     });
   };
 

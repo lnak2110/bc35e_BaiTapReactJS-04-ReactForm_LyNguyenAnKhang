@@ -1,154 +1,33 @@
 import React, { Component } from 'react';
 
 export default class StudentForm extends Component {
-  constructor(props) {
-    super(props);
-
-    this.state = {
-      student: {
-        id: '',
-        fullName: '',
-        phone: '',
-        email: '',
-      },
-      errors: {
-        id: '',
-        fullName: '',
-        phone: '',
-        email: '',
-      },
-      isFormValid: false,
-      isEditing: false,
-    };
-  }
-
+  // Clear form and errors if the user is editing a student and deleting that same student.
   componentDidUpdate(prevProps, prevState) {
-    const { studentToEdit, handleClearStudentToEdit } = this.props;
+    const { students, student, handleCancelEdit } = this.props;
 
-    if (studentToEdit.id !== '') {
-      this.setState({
-        errors: {
-          id: '',
-          fullName: '',
-          phone: '',
-          email: '',
-        },
-        isFormValid: true,
-      });
-      this.setState({ student: studentToEdit, isEditing: true });
-      handleClearStudentToEdit();
+    if (prevProps.students.length !== students.length) {
+      if (student.id) {
+        !students.some((s) => s.id === student.id) && handleCancelEdit();
+      }
     }
   }
-
-  checkValid = () => {
-    const { student, errors } = this.state;
-
-    for (let key in errors) {
-      if (errors[key] !== '' || student[key] === '') {
-        return false;
-      }
-    }
-
-    return true;
-  };
-
-  handleInputChange = (e) => {
-    const { name: inputField, value: inputValue } = e.target;
-
-    this.setState({
-      student: { ...this.state.student, [inputField]: inputValue },
-    });
-
-    let errorMessage = '';
-
-    if (inputValue.trim() === '') {
-      const displayField = {
-        id: 'ID',
-        fullName: 'Full name',
-        phone: 'Phone number',
-        email: 'Email',
-      };
-      errorMessage = `${displayField[inputField]} cannot be blank!`;
-    } else {
-      if (inputField === 'id') {
-        this.props.students.find((s) => s.id === inputValue) &&
-          (errorMessage = 'ID already exists!');
-      }
-
-      if (inputField === 'fullName') {
-        let regex =
-          /^[a-zA-Z_ÀÁÂÃÈÉÊẾÌÍÒÓÔÕÙÚĂĐĨŨƠàáâãèéêìíòóôõùúăđĩũơƯĂẠẢẤẦẨẪẬẮẰẲẴẶ" + "ẸẺẼỀỀỂưăạảấầẩẫậắằẳẵặẹẻẽềềểếỄỆỈỊỌỎỐỒỔỖỘỚỜỞỠỢỤỦỨỪễệỉịọỏốồổỗộớờởỡợ" + "ụủứừỬỮỰỲỴÝỶỸửữựýỳỵỷỹ\\s]+$/;
-
-        regex.test(inputValue) || (errorMessage = 'Invalid name!');
-      }
-
-      if (inputField === 'phone') {
-        let regex = /^(84|0[3|5|7|8|9])+([0-9]{8})\b$/;
-
-        regex.test(inputValue) || (errorMessage = 'Invalid phone number!');
-      }
-
-      if (inputField === 'email') {
-        let regex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
-
-        regex.test(inputValue) || (errorMessage = 'Invalid email!');
-      }
-    }
-
-    this.setState(
-      {
-        errors: { ...this.state.errors, [inputField]: errorMessage },
-      },
-      () => this.setState({ isFormValid: this.checkValid() })
-    );
-  };
-
-  handleSubmitForm = (e) => {
-    e.preventDefault();
-
-    if (!this.state.isFormValid) {
-      return;
-    }
-
-    this.props.handleAddStudent(this.state.student);
-    this.setState({
-      student: {
-        id: '',
-        fullName: '',
-        phone: '',
-        email: '',
-      },
-      isFormValid: false,
-    });
-  };
-
-  handleCancelEdit = () => {
-    this.props.handleClearStudentToEdit();
-    this.setState({
-      student: {
-        id: '',
-        fullName: '',
-        phone: '',
-        email: '',
-      },
-      errors: {
-        id: '',
-        fullName: '',
-        phone: '',
-        email: '',
-      },
-      isFormValid: false,
-      isEditing: false,
-    });
-  };
 
   render() {
-    const { handleUpdateStudent } = this.props;
+    const {
+      student,
+      errors,
+      isFormValid,
+      isEditing,
+      handleInputChange,
+      handleSubmitForm,
+      handleUpdateStudent,
+      handleCancelEdit,
+    } = this.props;
 
     return (
       <div>
         <h1 className="bg-dark text-white p-3">Thông tin sinh viên</h1>
-        <form onSubmit={this.handleSubmitForm}>
+        <form onSubmit={handleSubmitForm}>
           <div className="row" style={{ width: '100%' }}>
             <div className="col-12 col-md-6">
               <div className="py-3 px-4">
@@ -159,14 +38,12 @@ export default class StudentForm extends Component {
                   type="text"
                   name="id"
                   className="form-control"
-                  value={this.state.student.id}
-                  onChange={this.handleInputChange}
-                  disabled={this.state.isEditing}
+                  value={student.id}
+                  onChange={handleInputChange}
+                  disabled={isEditing}
                 />
-                {this.state.errors.id && (
-                  <p className="alert alert-danger p-2">
-                    {this.state.errors.id}
-                  </p>
+                {errors.id && (
+                  <p className="alert alert-danger p-2">{errors.id}</p>
                 )}
               </div>
             </div>
@@ -179,13 +56,11 @@ export default class StudentForm extends Component {
                   type="text"
                   name="fullName"
                   className="form-control"
-                  value={this.state.student.fullName}
-                  onChange={this.handleInputChange}
+                  value={student.fullName}
+                  onChange={handleInputChange}
                 />
-                {this.state.errors.fullName && (
-                  <p className="alert alert-danger p-2">
-                    {this.state.errors.fullName}
-                  </p>
+                {errors.fullName && (
+                  <p className="alert alert-danger p-2">{errors.fullName}</p>
                 )}
               </div>
             </div>
@@ -198,13 +73,11 @@ export default class StudentForm extends Component {
                   type="tel"
                   name="phone"
                   className="form-control"
-                  value={this.state.student.phone}
-                  onChange={this.handleInputChange}
+                  value={student.phone}
+                  onChange={handleInputChange}
                 />
-                {this.state.errors.phone && (
-                  <p className="alert alert-danger p-2">
-                    {this.state.errors.phone}
-                  </p>
+                {errors.phone && (
+                  <p className="alert alert-danger p-2">{errors.phone}</p>
                 )}
               </div>
             </div>
@@ -217,13 +90,11 @@ export default class StudentForm extends Component {
                   type="email"
                   name="email"
                   className="form-control"
-                  value={this.state.student.email}
-                  onChange={this.handleInputChange}
+                  value={student.email}
+                  onChange={handleInputChange}
                 />
-                {this.state.errors.email && (
-                  <p className="alert alert-danger p-2">
-                    {this.state.errors.email}
-                  </p>
+                {errors.email && (
+                  <p className="alert alert-danger p-2">{errors.email}</p>
                 )}
               </div>
             </div>
@@ -231,28 +102,27 @@ export default class StudentForm extends Component {
           <div className="mx-4 my-3">
             <button
               className="btn btn-success"
-              disabled={this.state.isEditing || !this.state.isFormValid}
+              disabled={isEditing || !isFormValid}
             >
               Thêm sinh viên
             </button>
-            {this.state.isEditing && (
+            {isEditing && (
               <>
                 <button
                   className="btn btn-info ms-3"
                   onClick={() => {
-                    if (!this.state.isFormValid) {
+                    if (!isFormValid) {
                       return;
                     }
-                    handleUpdateStudent(this.state.student);
-                    this.handleCancelEdit();
+                    handleUpdateStudent(student.id);
                   }}
-                  disabled={!this.state.isFormValid}
+                  disabled={!isFormValid}
                 >
                   Cập nhật
                 </button>
                 <button
                   className="btn btn-warning mx-3"
-                  onClick={this.handleCancelEdit}
+                  onClick={handleCancelEdit}
                 >
                   Hủy
                 </button>

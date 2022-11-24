@@ -8,17 +8,25 @@ export default class App extends Component {
 
     this.state = {
       students: [],
-      studentToEdit: {
+      student: {
         id: '',
         fullName: '',
         phone: '',
         email: '',
       },
+      errors: {
+        id: '',
+        fullName: '',
+        phone: '',
+        email: '',
+      },
+      isFormValid: false,
+      isEditing: false,
     };
   }
 
-  handleAddStudent = (student) => {
-    this.setState({ students: [...this.state.students, student] });
+  handleAddStudent = () => {
+    this.setState({ students: [...this.state.students, this.state.student] });
   };
 
   handleDeleteStudent = (id) => {
@@ -28,15 +36,93 @@ export default class App extends Component {
       });
   };
 
-  handleLoadStudentToEdit = (id) => {
+  checkValid = () => {
+    const { student, errors } = this.state;
+
+    for (let key in errors) {
+      if (errors[key] !== '' || student[key] === '') {
+        return false;
+      }
+    }
+
+    return true;
+  };
+
+  handleInputChange = (e) => {
+    const { name: inputField, value: inputValue } = e.target;
+
     this.setState({
-      studentToEdit: this.state.students.find((s) => s.id === id),
+      student: { ...this.state.student, [inputField]: inputValue },
+    });
+
+    let errorMessage = '';
+
+    if (inputValue.trim() === '') {
+      const displayField = {
+        id: 'ID',
+        fullName: 'Full name',
+        phone: 'Phone number',
+        email: 'Email',
+      };
+      errorMessage = `${displayField[inputField]} cannot be blank!`;
+    } else {
+      if (inputField === 'id') {
+        this.state.students.find((s) => s.id === inputValue) &&
+          (errorMessage = 'ID already exists!');
+      }
+
+      if (inputField === 'fullName') {
+        let regex =
+          /^[a-zA-Z_ÀÁÂÃÈÉÊẾÌÍÒÓÔÕÙÚĂĐĨŨƠàáâãèéêìíòóôõùúăđĩũơƯĂẠẢẤẦẨẪẬẮẰẲẴẶ" + "ẸẺẼỀỀỂưăạảấầẩẫậắằẳẵặẹẻẽềềểếỄỆỈỊỌỎỐỒỔỖỘỚỜỞỠỢỤỦỨỪễệỉịọỏốồổỗộớờởỡợ" + "ụủứừỬỮỰỲỴÝỶỸửữựýỳỵỷỹ\\s]+$/;
+
+        regex.test(inputValue) || (errorMessage = 'Invalid name!');
+      }
+
+      if (inputField === 'phone') {
+        let regex = /^(84|0[3|5|7|8|9])+([0-9]{8})\b$/;
+
+        regex.test(inputValue) || (errorMessage = 'Invalid phone number!');
+      }
+
+      if (inputField === 'email') {
+        let regex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+
+        regex.test(inputValue) || (errorMessage = 'Invalid email!');
+      }
+    }
+
+    this.setState(
+      {
+        errors: { ...this.state.errors, [inputField]: errorMessage },
+      },
+      () => this.setState({ isFormValid: this.checkValid() })
+    );
+  };
+
+  handleSubmitForm = (e) => {
+    e.preventDefault();
+
+    if (!this.state.isFormValid) {
+      return;
+    }
+
+    this.handleAddStudent();
+    this.setState({
+      student: {
+        id: '',
+        fullName: '',
+        phone: '',
+        email: '',
+      },
+      isFormValid: false,
     });
   };
 
-  handleClearStudentToEdit = () => {
+  handleLoadStudentToEdit = (id) => {
+    this.setState({ student: this.state.students.find((s) => s.id === id) });
+    this.setState({ isEditing: true });
     this.setState({
-      studentToEdit: {
+      errors: {
         id: '',
         fullName: '',
         phone: '',
@@ -45,12 +131,33 @@ export default class App extends Component {
     });
   };
 
-  handleUpdateStudent = (student) => {
+  handleCancelEdit = () => {
+    this.setState({
+      student: {
+        id: '',
+        fullName: '',
+        phone: '',
+        email: '',
+      },
+      errors: {
+        id: '',
+        fullName: '',
+        phone: '',
+        email: '',
+      },
+      isFormValid: false,
+      isEditing: false,
+    });
+  };
+
+  handleUpdateStudent = (id) => {
     this.setState({
       students: this.state.students.map((s) =>
-        s.id === student.id ? student : s
+        s.id === id ? this.state.student : s
       ),
     });
+
+    this.handleCancelEdit();
   };
 
   render() {
@@ -58,10 +165,14 @@ export default class App extends Component {
       <div>
         <StudentForm
           students={this.state.students}
-          studentToEdit={this.state.studentToEdit}
-          handleAddStudent={this.handleAddStudent}
-          handleClearStudentToEdit={this.handleClearStudentToEdit}
+          student={this.state.student}
+          errors={this.state.errors}
+          isFormValid={this.state.isFormValid}
+          isEditing={this.state.isEditing}
+          handleInputChange={this.handleInputChange}
+          handleSubmitForm={this.handleSubmitForm}
           handleUpdateStudent={this.handleUpdateStudent}
+          handleCancelEdit={this.handleCancelEdit}
         />
         <StudentTable
           students={this.state.students}
