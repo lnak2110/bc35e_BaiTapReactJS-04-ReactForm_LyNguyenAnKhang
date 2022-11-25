@@ -128,6 +128,7 @@ export default class App extends Component {
         phone: '',
         email: '',
       },
+      isFormValid: true,
     });
   };
 
